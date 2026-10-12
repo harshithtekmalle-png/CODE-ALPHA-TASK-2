@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhishGuard | Real-Time Phishing Detection & Analysis</title>
+    <meta name="description" content="Real-time rule-based cybersecurity detection engine analyzing URLs and text messages for phishing indicators.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="cyber-dark-theme">
+    <!-- Top System Header -->
+    <header class="app-header">
+        <div class="brand-container">
+            <div class="brand-shield-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    <path d="M9 12l2 2 4-4"/>
+                </svg>
+            </div>
+            <div class="brand-text">
+                <h1 class="brand-title">PHISHGUARD</h1>
+                <span class="brand-subtitle">Real-Time Phishing Detection &amp; Analysis</span>
+            </div>
+        </div>
+
+        <div class="system-status-container">
+            <div class="status-indicator">
+                <span class="status-pulse-dot"></span>
+                <span class="status-label">ENGINE ONLINE</span>
+            </div>
+            <div class="engine-badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 14 14"></polyline>
+                </svg>
+                <span id="systemClock">UTC ACTIVE</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <nav class="nav-menu" aria-label="Main Navigation">
+                <button class="nav-item active" data-tab="dashboard-view" id="navDashboard">
+                    <span class="nav-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="7" height="9"></rect>
+                            <rect x="14" y="3" width="7" height="5"></rect>
+                            <rect x="14" y="12" width="7" height="9"></rect>
+                            <rect x="3" y="16" width="7" height="5"></rect>
+                        </svg>
+                    </span>
+                    <span class="nav-text">Dashboard</span>
+                </button>
+
+                <button class="nav-item" data-tab="url-view" id="navUrl">
+                    <span class="nav-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="2" y1="12" x2="22" y2="12"></line>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                        </svg>
+                    </span>
+                    <span class="nav-text">URL Scanner</span>
+                </button>
+
+                <button class="nav-item" data-tab="message-view" id="navMessage">
+                    <span class="nav-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                    </span>
+                    <span class="nav-text">Message Analyzer</span>
+                </button>
+
+                <button class="nav-item" data-tab="history-view" id="navHistory">
+                    <span class="nav-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                    </span>
+                    <span class="nav-text">Scan History</span>
+                    <span class="history-badge" id="navHistoryCount">0</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-disclaimer">
+                <div class="disclaimer-header">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <span>SECURITY NOTICE</span>
+                </div>
+                <p>Rule-based heuristic indicator analysis. Results do not constitute an absolute guarantee of safety or maliciousness.</p>
+            </div>
+        </aside>
+
+        <!-- Main Workspace Area -->
+        <main class="main-content">
+            <!-- Toast Notification Container -->
+            <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+            <!-- ================= VIEW 1: DASHBOARD ================= -->
+            <section id="dashboard-view" class="view-panel active">
+                <div class="view-header">
+                    <div>
+                        <h2 class="view-heading">Security Operations Dashboard</h2>
+                        <p class="view-subheading">Real-time telemetry and aggregated phishing scan metrics from SQLite database.</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn btn-secondary" id="btnRefreshStats" title="Sync Metrics with Database">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="23 4 23 10 17 10"></polyline>
+                                <polyline points="1 20 1 14 7 14"></polyline>
+                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                            </svg>
+                            <span>Sync Telemetry</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Live Metrics Grid -->
+                <div class="metrics-grid">
+                    <!-- Total Scans -->
+                    <div class="metric-card total-metric">
+                        <div class="metric-header">
+                            <span class="metric-title">TOTAL SCANS</span>
+                            <span class="metric-badge">All Types</span>
+                        </div>
+                        <div class="metric-value" id="statTotalScans">0</div>
+                        <div class="metric-footer">
+                            <span>Aggregate database records</span>
+                        </div>
+                    </div>
+
+                    <!-- URL Scans -->
+                    <div class="metric-card url-metric">
+                        <div class="metric-header">
+                            <span class="metric-title">URL SCANS</span>
+                            <span class="metric-badge">Web Targets</span>
+                        </div>
+                        <div class="metric-value" id="statUrlScans">0</div>
+                        <div class="metric-footer">
+                            <span>Domain &amp; RFC URL inspections</span>
+                        </div>
+                    </div>
+
+                    <!-- Message Scans -->
+                    <div class="metric-card message-metric">
+                        <div class="metric-header">
+                            <span class="metric-title">MESSAGE SCANS</span>
+                            <span class="metric-badge">Text Lures</span>
+                        </div>
+                        <div class="metric-value" id="statMessageScans">0</div>
+                        <div class="metric-footer">
+                            <span>Social engineering heuristics</span>
+                        </div>
+                    </div>
+
+                    <!-- Low Risk -->
+                    <div class="metric-card low-metric">
+                        <div class="metric-header">
+                            <span class="metric-title">LOW RISK</span>
+                            <span class="metric-badge-risk low">0–24</span>
+                        </div>
+                        <div class="metric-value" id="statLowRisk">0</div>
+                        <div class="metric-footer">
+                            <span>Nominal threat profile</span>
+                        </div>
+                    </div>
+
+                    <!-- Suspicious -->
+                    <div class="metric-card suspicious-metric">
+                        <div class="metric-header">
+                            <span class="metric-title">SUSPICIOUS</span>
+                            <span class="metric-badge-risk suspicious">25–49</span>
+                        </div>
+                        <div class="metric-value" id="statSuspicious">0</div>
+                        <div class="metric-footer">
+                            <span>Elevated flags detected</span>
+                        </div>
+                    </div>
+
+                    <!-- High Risk -->
+                    <div class="metric-card high-metric">
+                        <div class="metric-header">
+                            <span class="metric-title">HIGH RISK</span>
+                            <span class="metric-badge-risk high">50–74</span>
+                        </div>
+                        <div class="metric-value" id="statHighRisk">0</div>
+                        <div class="metric-footer">
+                            <span>Strong phishing indicators</span>
+                        </div>
+                    </div>
+
+                    <!-- Critical -->
+                    <div class="metric-card critical-metric">
+                        <div class="metric-header">
+                            <span class="metric-title">CRITICAL</span>
+                            <span class="metric-badge-risk critical">75–100</span>
+                        </div>
+                        <div class="metric-value" id="statCritical">0</div>
+                        <div class="metric-footer">
+                            <span>Severe attack patterns</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Action Banners -->
+                <div class="dashboard-split-row">
+                    <!-- Quick Scanner Portal -->
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3 class="card-title">Real-Time Inspection Engine</h3>
+                            <span class="card-badge">Zero-Day Heuristics</span>
+                        </div>
+                        <p class="card-desc">Execute instant, isolated, non-executing heuristic scans against live web addresses or suspect communication bodies.</p>
+                        <div class="quick-launch-buttons">
+                            <button class="btn btn-primary" id="btnLaunchUrlScan">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="2" y1="12" x2="22" y2="12"></line>
+                                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                                </svg>
+                                <span>Launch URL Scanner</span>
+                            </button>
+                            <button class="btn btn-secondary" id="btnLaunchMessageScan">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                </svg>
+                                <span>Launch Message Analyzer</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Risk Tier Reference Guide -->
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3 class="card-title">Transparent Scoring Matrix</h3>
+                            <span class="card-badge">Deterministic Rule Set</span>
+                        </div>
+                        <div class="risk-matrix-list">
+                            <div class="matrix-item low">
+                                <div class="matrix-dot"></div>
+                                <div class="matrix-info">
+                                    <span class="matrix-range">0 – 24</span>
+                                    <span class="matrix-label">LOW RISK</span>
+                                </div>
+                                <span class="matrix-detail">Standard syntax, verified protocol, no known phishing triggers</span>
+                            </div>
+                            <div class="matrix-item suspicious">
+                                <div class="matrix-dot"></div>
+                                <div class="matrix-info">
+                                    <span class="matrix-range">25 – 49</span>
+                                    <span class="matrix-label">SUSPICIOUS</span>
+                                </div>
+                                <span class="matrix-detail">URL shorteners, mild urgency, unusual parameters, high-risk TLDs</span>
+                            </div>
+                            <div class="matrix-item high">
+                                <div class="matrix-dot"></div>
+                                <div class="matrix-info">
+                                    <span class="matrix-range">50 – 74</span>
+                                    <span class="matrix-label">HIGH RISK</span>
+                                </div>
+                                <span class="matrix-detail">Brand keywords, deep subdomains, credential demands, threat language</span>
+                            </div>
+                            <div class="matrix-item critical">
+                                <div class="matrix-dot"></div>
+                                <div class="matrix-info">
+                                    <span class="matrix-range">75 – 100</span>
+                                    <span class="matrix-label">CRITICAL</span>
+                                </div>
+                                <span class="matrix-detail">Raw IP hostnames, authority `@` redirection, severe coercion lures</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity Feed -->
+                <div class="dashboard-card mt-6">
+                    <div class="card-header">
+                        <h3 class="card-title">Live SQLite Telemetry Feed</h3>
+                        <button class="btn btn-sm btn-ghost" id="btnViewAllHistory">View Full History &rarr;</button>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp (UTC)</th>
+                                    <th>Scan Type</th>
+                                    <th>Target Evaluated</th>
+                                    <th>Risk Score</th>
+                                    <th>Risk Level</th>
+                                    <th>Indicators</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashboardRecentTbody">
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-6">Loading SQLite records...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ================= VIEW 2: URL SCANNER ================= -->
+            <section id="url-view" class="view-panel">
+                <div class="view-header">
+                    <div>
+                        <h2 class="view-heading">URL Scanner</h2>
+                        <p class="view-subheading">Inspect web addresses for domain typosquatting, raw IP targets, obfuscated ports, and deceptive redirects.</p>
+                    </div>
+                </div>
+
+                <div class="scanner-card">
+                    <form id="urlScanForm" onsubmit="return false;">
+                        <div class="form-group">
+                            <label for="urlInput" class="form-label">
+                                <span>Target URL</span>
+                                <span class="text-muted text-xs">Safe, non-visiting static heuristic inspection</span>
+                            </label>
+                            <div class="input-with-button">
+                                <div class="input-icon">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <line x1="2" y1="12" x2="22" y2="12"></line>
+                                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                                    </svg>
+                                </div>
+                                <input 
+                                    type="text" 
+                                    id="urlInput" 
+                                    class="form-control text-mono" 
+                                    placeholder="https://example.com" 
+                                    autocomplete="off" 
+                                    spellcheck="false"
+                                    required
+                                >
+                                <button type="submit" id="btnScanUrl" class="btn btn-primary btn-action">
+                                    <span class="btn-spinner" id="urlSpinner"></span>
+                                    <span class="btn-text">SCAN URL</span>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Safe Test Input Samples -->
+                    <div class="sample-pills-row">
+                        <span class="sample-pills-label">Safe Sample Presets:</span>
+                        <button type="button" class="preset-pill" data-target="https://example.com">
+                            <span>example.com</span>
+                            <span class="pill-tag benign">Benign</span>
+                        </button>
+                        <button type="button" class="preset-pill" data-target="http://192.168.1.1/login.php">
+                            <span>192.168.1.1/login</span>
+                            <span class="pill-tag crit">IP Host</span>
+                        </button>
+                        <button type="button" class="preset-pill" data-target="http://paypal.com@verify-account.security-update.xyz/login">
+                            <span>paypal@sec-update.xyz</span>
+                            <span class="pill-tag crit">@ Redirect</span>
+                        </button>
+                        <button type="button" class="preset-pill" data-target="https://bit.ly/secure-banking-portal">
+                            <span>bit.ly/secure-banking</span>
+                            <span class="pill-tag susp">Shortener</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- URL Analysis Result Panel (Dynamically Rendered) -->
+                <div id="urlResultContainer" class="result-container hidden">
+                    <!-- Populated dynamically via JavaScript -->
+                </div>
+            </section>
+
+            <!-- ================= VIEW 3: MESSAGE ANALYZER ================= -->
+            <section id="message-view" class="view-panel">
+                <div class="view-header">
+                    <div>
+                        <h2 class="view-heading">Message Analyzer</h2>
+                        <p class="view-subheading">Analyze emails, SMS, and chat transcripts for social engineering, coercive urgency, and credential lures.</p>
+                    </div>
+                </div>
+
+                <div class="scanner-card">
+                    <form id="messageScanForm" onsubmit="return false;">
+                        <div class="form-group">
+                            <div class="label-with-counter">
+                                <label for="messageInput" class="form-label">
+                                    <span>Suspicious Message Content</span>
+                                </label>
+                                <span class="char-counter" id="messageCharCounter">0 / 10,000 characters</span>
+                            </div>
+                            <textarea 
+                                id="messageInput" 
+                                class="form-control text-area" 
+                                rows="6" 
+                                placeholder="Paste a suspicious message here..."
+                                maxlength="10000"
+                                required
+                            ></textarea>
+                        </div>
+                        <div class="form-actions-bar">
+                            <div class="sample-pills-row">
+                                <span class="sample-pills-label">Sample Lures:</span>
+                                <button type="button" class="preset-msg-pill" data-sample="benign">
+                                    Benign Meeting
+                                </button>
+                                <button type="button" class="preset-msg-pill" data-sample="urgent_account">
+                                    Urgent Account Suspension
+                                </button>
+                                <button type="button" class="preset-msg-pill" data-sample="prize_lottery">
+                                    Lottery / Cash Reward
+                                </button>
+                                <button type="button" class="preset-msg-pill" data-sample="delivery_scam">
+                                    Delivery Postal Notice
+                                </button>
+                            </div>
+                            <button type="submit" id="btnAnalyzeMessage" class="btn btn-primary btn-action">
+                                <span class="btn-spinner" id="msgSpinner"></span>
+                                <span class="btn-text">ANALYZE MESSAGE</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Message Analysis Result Panel (Dynamically Rendered) -->
+                <div id="messageResultContainer" class="result-container hidden">
+                    <!-- Populated dynamically via JavaScript -->
+                </div>
+            </section>
+
+            <!-- ================= VIEW 4: SCAN HISTORY ================= -->
+            <section id="history-view" class="view-panel">
+                <div class="view-header">
+                    <div>
+                        <h2 class="view-heading">Scan History &amp; Audit Log</h2>
+                        <p class="view-subheading">Direct records retrieved from SQLite database (phishguard.db). Zero mock data.</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn btn-secondary" id="btnReloadHistory">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="23 4 23 10 17 10"></polyline>
+                                <polyline points="1 20 1 14 7 14"></polyline>
+                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                            </svg>
+                            <span>Refresh</span>
+                        </button>
+                        <button class="btn btn-danger" id="btnClearHistory">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                <line x1="10" y1="11" x2="10" y2="17"></line>
+                                <line x1="14" y1="11" x2="14" y2="17"></line>
+                            </svg>
+                            <span>CLEAR HISTORY</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filter Controls -->
+                <div class="history-filter-bar">
+                    <div class="filter-group">
+                        <label for="filterType">Type:</label>
+                        <select id="filterType" class="form-select">
+                            <option value="all">All Scans</option>
+                            <option value="url">URLs Only</option>
+                            <option value="message">Messages Only</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="filterRisk">Risk Level:</label>
+                        <select id="filterRisk" class="form-select">
+                            <option value="all">All Risk Levels</option>
+                            <option value="Low Risk">Low Risk</option>
+                            <option value="Suspicious">Suspicious</option>
+                            <option value="High Risk">High Risk</option>
+                            <option value="Critical">Critical</option>
+                        </select>
+                    </div>
+                    <div class="filter-search-group">
+                        <input type="text" id="historySearchInput" class="form-control" placeholder="Search target text...">
+                    </div>
+                </div>
+
+                <!-- History Records Table -->
+                <div class="dashboard-card">
+                    <div class="table-container">
+                        <table class="data-table" id="historyTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Timestamp (UTC)</th>
+                                    <th>Type</th>
+                                    <th>Target Evaluated</th>
+                                    <th>Score</th>
+                                    <th>Risk Level</th>
+                                    <th>Indicators Count</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyTbody">
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted py-8">Fetching SQLite database records...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Indicator Detail Modal -->
+    <div id="detailModal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="modal-title-wrap">
+                    <h3 class="modal-title" id="modalTitle">Scan Evaluation Details</h3>
+                    <span class="modal-badge" id="modalTypeBadge">URL</span>
+                </div>
+                <button type="button" class="btn-close-modal" id="btnCloseModal" aria-label="Close dialog">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Dynamically rendered content -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="btnDismissModal">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
